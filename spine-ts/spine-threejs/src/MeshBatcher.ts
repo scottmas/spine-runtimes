@@ -130,15 +130,27 @@ export class MeshBatcher extends THREE.Mesh {
 
 	end () {
 		this.vertexBuffer.needsUpdate = this.verticesLength > 0;
-		this.vertexBuffer.updateRange.offset = 0;
-		this.vertexBuffer.updateRange.count = this.verticesLength;
+		// Use the latest threejs BufferAttribute api if possible
+		if(this.vertexBuffer.addUpdateRange){
+		   	this.vertexBuffer.addUpdateRange(0, this.verticesLength);
+		} else {
+			this.vertexBuffer.updateRange.offset = 0;
+			this.vertexBuffer.updateRange.count = this.verticesLength;
+		}
+		
 		let geo = (<THREE.BufferGeometry>this.geometry);
 		this.closeMaterialGroups();
 		let index = geo.getIndex();
 		if (!index) throw new Error("BufferAttribute must not be null.");
 		index.needsUpdate = this.indicesLength > 0;
-		index.updateRange.offset = 0;
-		index.updateRange.count = this.indicesLength;
+		// Use the latest threejs BufferAttribute api if possible
+		if(index.addUpdateRange){
+			index.addUpdateRange(0, this.indicesLength);	
+		} else {
+			index.updateRange.offset = 0;
+			index.updateRange.count = this.indicesLength;
+		}
+		
 		geo.drawRange.start = 0;
 		geo.drawRange.count = this.indicesLength;
 	}
