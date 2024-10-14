@@ -130,15 +130,26 @@ export class MeshBatcher extends THREE.Mesh {
 
 	end () {
 		this.vertexBuffer.needsUpdate = this.verticesLength > 0;
-		this.vertexBuffer.updateRange.offset = 0;
-		this.vertexBuffer.updateRange.count = this.verticesLength;
-		let geo = (<THREE.BufferGeometry>this.geometry);
-		this.closeMaterialGroups();
-		let index = geo.getIndex();
-		if (!index) throw new Error("BufferAttribute must not be null.");
+
+    const geo = (<THREE.BufferGeometry>this.geometry);
+    this.closeMaterialGroups();
+    const index = geo.getIndex();
+    if (!index) throw new Error("BufferAttribute must not be null.");
+
+    //Three.js is a peer dependency, so we must support both the old `updateRange` api and the new `addUpdateRange` api.
+    if ("addUpdateRange" in THREE.BufferAttribute.prototype) {
+      this.vertexBuffer.addUpdateRange(0, this.verticesLength);
+      index.addUpdateRange(0, this.indicesLength);
+    } else {
+      //Have to cast as `any` here b/c at build time we assume the latest Three.js version. But could be an old version at runtime.
+      (this.vertexBuffer as any).updateRange.offset = 0;
+      (this.vertexBuffer as any).updateRange.count = this.verticesLength;
+      (index as any).updateRange.offset = 0;
+      (index as any).updateRange.count = this.indicesLength;
+    }
+
+    this.vertexBuffer.needsUpdate = this.verticesLength > 0;
 		index.needsUpdate = this.indicesLength > 0;
-		index.updateRange.offset = 0;
-		index.updateRange.count = this.indicesLength;
 		geo.drawRange.start = 0;
 		geo.drawRange.count = this.indicesLength;
 	}

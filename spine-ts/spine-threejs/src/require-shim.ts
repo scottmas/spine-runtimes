@@ -31,11 +31,11 @@ declare global {
 	var require: any;
 }
 
-if (typeof window !== 'undefined' && window.THREE) {
+if (typeof window !== 'undefined' && (window as any).THREE) {
 	let prevRequire = window.require;
 	window.require = (x: string) => {
 		if (prevRequire) return prevRequire(x);
-		else if (x === "three") return window.THREE;
+		else if (x === "three") return (window as any).THREE;
 	}
 }
 
